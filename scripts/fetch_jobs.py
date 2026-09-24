@@ -134,7 +134,10 @@ def main():
         try:
             results = fetch(role, config, api_key)
         except (urllib.error.URLError, ValueError) as err:
-            print(f"Search '{role}' failed: {err}", file=sys.stderr)
+            detail = ""
+            if isinstance(err, urllib.error.HTTPError):
+                detail = " — " + err.read().decode(errors="replace")[:500]
+            print(f"Search '{role}' failed: {err}{detail}", file=sys.stderr)
             sections.append((role, None))
             failures += 1
             continue
