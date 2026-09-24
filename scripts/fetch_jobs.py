@@ -70,25 +70,24 @@ def link(label, url):
     return f"[{escape(label)}]({url})" if url else ""
 
 
-def company_site(job):
-    """Link to the posting on the employer's own site, else the employer homepage."""
-    options = job.get("apply_options") or []
-    direct = [o for o in options if o.get("is_direct") and o.get("apply_link")]
-    if direct:
-        return link("Apply on company site", direct[0]["apply_link"])
-    if job.get("job_apply_is_direct") and job.get("job_apply_link"):
-        return link("Apply on company site", job["job_apply_link"])
-    if job.get("employer_website"):
-        return link("Company website", job["employer_website"])
-    return "—"
-
-
-def job_boards(job):
+def apply_option(job):
+    """Best place to apply: the employer's own site if listed, else the job board."""
     options = [o for o in job.get("apply_options") or [] if o.get("apply_link")]
-    if not options and job.get("job_apply_link"):
-        options = [{"publisher": job.get("job_publisher") or "Listing",
-                    "apply_link": job["job_apply_link"]}]
-    return ", ".join(link(o.get("publisher") or "Listing", o["apply_link"]) for o in options)
+    direct = [o for o in options if o.get("is_direct")]
+    if direct:
+        return "company site", direct[0]["apply_link"]
+    if job.get("job_apply_link"):
+        where = "company site" if job.get("job_apply_is_direct") else job.get("job_publisher")
+        return where or "job board", job["job_apply_link"]
+    if options:
+        return options[0].get("publisher") or "job board", options[0]["apply_link"]
+    return None, None
+
+
+def company(job):
+    name = escape(job.get("employer_name"))
+    website = job.get("employer_website")
+    return f"[{name}]({website})" if website and name else name
 
 
 def location(job):
@@ -126,14 +125,15 @@ def render(date, config, sections):
         if not jobs:
             lines += ["_No postings other than those listed above._", ""]
             continue
-        lines.append("| Title | Company | Location | Salary | Posted | Company site | Job boards |")
-        lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+        lines.append("| Job | Apply | Company | Location | Posted | Salary |")
+        lines.append("| --- | --- | --- | --- | --- | --- |")
         for job in jobs:
+            where, url = apply_option(job)
+            title = job.get("job_title")
             lines.append(
-                f"| {escape(job.get('job_title'))} | {escape(job.get('employer_name'))} "
-                f"| {location(job)} | {salary(job)} "
-                f"| {str(job.get('job_posted_at_datetime_utc') or '')[:10]} "
-                f"| {company_site(job)} | {job_boards(job)} |"
+                f"| {link(title, url) or escape(title)} | {link(f'Apply on {where}', url) or '—'} "
+                f"| {company(job)} | {location(job)} "
+                f"| {str(job.get('job_posted_at_datetime_utc') or '')[:10]} | {salary(job)} |"
             )
         lines.append("")
     return "\n".join(lines)
