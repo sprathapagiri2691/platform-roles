@@ -1,0 +1,21 @@
+# Job searches run every day by .github/workflows/daily-jobs.yml
+#
+# Each role is searched around `location` within `radius_miles`.
+# 100 miles around San Francisco covers the whole Bay Area, including
+# Santa Clara, Palo Alto, Sunnyvale, Mountain View and Fremont.
+#
+# date_posted: today | 3days | week | month | all
+# pages_per_role: each page is ~10 jobs and costs one API request.
+#   4 roles x 1 page x 30 days = 120 requests/month.
+
+location: San Francisco, CA
+country: us
+radius_miles: 100
+date_posted: today
+pages_per_role: 1
+
+roles:
+  - Platform Engineer
+  - Senior Platform Engineer
+  - Senior Cloud Engineer
+  - Senior DevOps Engineer
