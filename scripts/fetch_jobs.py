@@ -163,7 +163,9 @@ def main():
         # Engineer") return the same postings; list each job only once.
         jobs = []
         for job in results:
-            key = job.get("job_id") or (job.get("job_title"), job.get("employer_name"))
+            # search-v2 job_ids differ between queries, so match on the posting itself.
+            key = tuple(str(job.get(f) or "").strip().lower()
+                        for f in ("job_title", "employer_name", "job_city"))
             if key not in seen:
                 seen.add(key)
                 jobs.append(job)
