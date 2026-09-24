@@ -170,6 +170,9 @@ def main():
                 seen.add(key)
                 jobs.append(job)
         print(f"{role}: {len(results)} found, {len(jobs)} new")
+        for job in jobs:
+            url = apply_option(job)[1] or "(no link)"
+            print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}\n    {url}")
         if results and "job_title" not in results[0]:
             print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
         sections.append((role, jobs))
