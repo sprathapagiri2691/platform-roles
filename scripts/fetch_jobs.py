@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-API_URL = "https://jsearch.p.rapidapi.com/search"
+API_URL = "https://jsearch.p.rapidapi.com/search-v2"
 API_HOST = "jsearch.p.rapidapi.com"
 KM_PER_MILE = 1.609344
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,7 +41,11 @@ def fetch(role, config, api_key):
         },
     )
     with urllib.request.urlopen(request, timeout=60) as resp:
-        return json.load(resp).get("data", [])
+        data = json.load(resp).get("data") or []
+    # search-v2 may wrap the job list in an object rather than return it directly.
+    if isinstance(data, dict):
+        data = data.get("jobs") or data.get("data") or []
+    return data
 
 
 def escape(text):
@@ -150,6 +154,8 @@ def main():
                 seen.add(key)
                 jobs.append(job)
         print(f"{role}: {len(results)} found, {len(jobs)} new")
+        if results and "job_title" not in results[0]:
+            print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
         sections.append((role, jobs))
 
     date = datetime.date.today().isoformat()
