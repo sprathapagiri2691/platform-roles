@@ -10,6 +10,7 @@ import datetime
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -20,6 +21,8 @@ import yaml
 API_URL = "https://jsearch.p.rapidapi.com/search-v2"
 API_HOST = "jsearch.p.rapidapi.com"
 KM_PER_MILE = 1.609344
+TIMEOUT_SECONDS = 120
+ATTEMPTS = 2
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -40,8 +43,19 @@ def fetch(role, config, api_key):
             "User-Agent": "platform-jobs-daily",
         },
     )
-    with urllib.request.urlopen(request, timeout=60) as resp:
-        data = json.load(resp).get("data") or []
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as resp:
+                data = json.load(resp).get("data") or []
+            break
+        except (TimeoutError, urllib.error.URLError) as err:
+            # Retry slow responses and server errors once; client errors
+            # such as a bad key or a missing endpoint won't fix themselves.
+            client_error = isinstance(err, urllib.error.HTTPError) and err.code < 500
+            if client_error or attempt == ATTEMPTS:
+                raise
+            print(f"Search '{role}' attempt {attempt} failed ({err}); retrying", file=sys.stderr)
+            time.sleep(10)
     # search-v2 may wrap the job list in an object rather than return it directly.
     if isinstance(data, dict):
         data = data.get("jobs") or data.get("data") or []
@@ -137,7 +151,7 @@ def main():
     for role in config.get("roles", []):
         try:
             results = fetch(role, config, api_key)
-        except (urllib.error.URLError, ValueError) as err:
+        except (OSError, ValueError) as err:
             detail = ""
             if isinstance(err, urllib.error.HTTPError):
                 detail = " — " + err.read().decode(errors="replace")[:500]
