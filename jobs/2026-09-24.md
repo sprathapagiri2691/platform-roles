@@ -1,6 +1,6 @@
 # Jobs posted — 2026-09-24
 
-**26** jobs within 100 miles of San Francisco, CA. Each job is listed once, under the first role that found it.
+**25** jobs within 100 miles of San Francisco, CA. Each job is listed once, under the first role that found it.
 
 ## Platform Engineer
 
@@ -21,29 +21,28 @@
 
 | Job | Apply | Company | Location | Posted | Salary |
 | --- | --- | --- | --- | --- | --- |
-| [Cloud Infrastructure Engineer - Platform Engineering](https://www.ziprecruiter.com/c/senior-mechanical-engineer-xona-space-systems/Job/Cloud-Infrastructure-Engineer-Platform-Engineering/-in-Burlingame,CA?jid=53ce7a5c04087672) | [Apply on ZipRecruiter](https://www.ziprecruiter.com/c/senior-mechanical-engineer-xona-space-systems/Job/Cloud-Infrastructure-Engineer-Platform-Engineering/-in-Burlingame,CA?jid=53ce7a5c04087672) | Senior Mechanical Engineer @ Xona Space Systems | Burlingame, California | 2026-09-23 |  |
-| [Senior AI Platform Engineer, Data and Systems](https://simplify.jobs/p/d1b186ab-e5a7-4897-adc9-b326f4772bfc/Senior-AI-Platform-Engineer-Data-and-Systems) | [Apply on Simplify](https://simplify.jobs/p/d1b186ab-e5a7-4897-adc9-b326f4772bfc/Senior-AI-Platform-Engineer-Data-and-Systems) | [Adobe](https://www.adobe.com) | San Jose, California | 2026-09-23 | 159,000 – 302,000 /year |
-| [Senior Software Engineer, ML Infra - Asset Safety](https://www.linkedin.com/jobs/view/senior-software-engineer-ml-infra-asset-safety-at-roblox-4469614798) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-software-engineer-ml-infra-asset-safety-at-roblox-4469614798) | [Roblox](https://about.roblox.com) | San Mateo, California | 2026-09-23 |  |
+| [Senior Staff Software Engineer, Core Automation](https://www.linkedin.com/jobs/view/senior-staff-software-engineer-core-automation-at-coinbase-4425630549) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-staff-software-engineer-core-automation-at-coinbase-4425630549) | [Coinbase](https://www.coinbase.com) | Remote | 2026-09-23 |  |
+| [Data Platform Engineer, Data Infrastructure](https://simplify.jobs/p/309750d4-3791-423a-893a-8dafd1c0d103/Data-Platform-Engineer) | [Apply on Simplify](https://simplify.jobs/p/309750d4-3791-423a-893a-8dafd1c0d103/Data-Platform-Engineer) | [DatologyAI](https://www.datologyai.com) | San Mateo, California | 2026-09-23 | 180,000 – 300,000 /year |
 
 ## Senior Cloud Engineer
 
 | Job | Apply | Company | Location | Posted | Salary |
 | --- | --- | --- | --- | --- | --- |
 | [AWS Certified Cloud Engineer - Python](https://www.linkedin.com/jobs/view/aws-certified-cloud-engineer-python-at-bayone-solutions-4469487861) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/aws-certified-cloud-engineer-python-at-bayone-solutions-4469487861) | [BayOne Solutions](https://bayone.com) | South San Francisco, California | 2026-09-23 |  |
-| [Infrastructure & DevOps Engineer III](https://www.linkedin.com/jobs/view/infrastructure-devops-engineer-iii-at-quince-4470975362) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/infrastructure-devops-engineer-iii-at-quince-4470975362) | [Quince](https://www.quince.com) | Palo Alto, California | 2026-09-23 |  |
+| [Senior Software Engineer, Google Cloud Security Command Center](https://www.linkedin.com/jobs/view/senior-software-engineer-google-cloud-security-command-center-at-google-4469617258) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-software-engineer-google-cloud-security-command-center-at-google-4469617258) | Google | Sunnyvale, California | 2026-09-23 |  |
+| [AI Devops Infrastructure Engineer/GPU Infrastructure Engineer](https://www.dice.com/job-detail/3f597fb4-ded2-4875-b679-59a6b81de995) | [Apply on Dice](https://www.dice.com/job-detail/3f597fb4-ded2-4875-b679-59a6b81de995) | Maxonic, Inc. | San Jose, California | 2026-09-23 |  |
 | [Manager, Cloud Engineering & Operations](https://www.linkedin.com/jobs/view/manager-cloud-engineering-operations-at-ss8-networks-4471133090) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/manager-cloud-engineering-operations-at-ss8-networks-4471133090) | SS8 Networks | Milpitas, California | 2026-09-23 |  |
-| [Senior DevOps Engineer](https://www.theladders.com/job/senior-devops-engineer-halodirobotics-san-carlos-ca_88979124) | [Apply on Ladders](https://www.theladders.com/job/senior-devops-engineer-halodirobotics-san-carlos-ca_88979124) | Halodi Robotics | San Carlos, California | 2026-09-23 | 190,000 – 230,000 /year |
 | [Sr. IT Infrastructure Engineer - 151072-1](https://bandana.com/jobs/168ca9cb-3be3-4674-98c0-f9c91b44ea82) | [Apply on Bandana.com](https://bandana.com/jobs/168ca9cb-3be3-4674-98c0-f9c91b44ea82) | [Superior Court of California, County of Alameda](https://www.alameda.courts.ca.gov) | Oakland, California | 2026-09-23 | 127,150 – 165,235 /year |
-| [Senior SE - Ai Cloud](https://www.linkedin.com/jobs/view/senior-se-ai-cloud-at-nokia-4469346686) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-se-ai-cloud-at-nokia-4469346686) | [Nokia](https://www.nokia.com) | Sunnyvale, California | 2026-09-23 |  |
-| [Senior Agent Engineer, Google Cloud, Applied AI](https://www.linkedin.com/jobs/view/senior-agent-engineer-google-cloud-applied-ai-at-google-4460970203) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-agent-engineer-google-cloud-applied-ai-at-google-4460970203) | Google | Sunnyvale, California | 2026-09-23 |  |
 | [Senior GCP Architect](https://www.linkedin.com/jobs/view/senior-gcp-architect-at-deloitte-4470697142) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-gcp-architect-at-deloitte-4470697142) | [Deloitte](https://www.deloitte.com) | Monterey, California | 2026-09-23 |  |
+| [Senior Agent Engineer, Google Cloud, Applied AI](https://www.linkedin.com/jobs/view/senior-agent-engineer-google-cloud-applied-ai-at-google-4460970203) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-agent-engineer-google-cloud-applied-ai-at-google-4460970203) | Google | Sunnyvale, California | 2026-09-23 |  |
 | [Senior DevOps Engineer](https://www.linkedin.com/jobs/view/senior-devops-engineer-at-centric-software-4460600217) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/senior-devops-engineer-at-centric-software-4460600217) | [Centric Software](https://www.centricsoftware.com) | Campbell, California | 2026-09-23 |  |
+| [GCP Technical Account Manager](https://www.linkedin.com/jobs/view/gcp-technical-account-manager-at-deloitte-4470682876) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/gcp-technical-account-manager-at-deloitte-4470682876) | [Deloitte](https://www.deloitte.com) | San Jose, California | 2026-09-23 |  |
+| [Staff Cloud Security Engineer - #4824](https://www.linkedin.com/jobs/view/staff-cloud-security-engineer-%234824-at-grail-4442209347) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/staff-cloud-security-engineer-%234824-at-grail-4442209347) | GRAIL | Sunnyvale, California | 2026-09-23 |  |
 
 ## Senior DevOps Engineer
 
 | Job | Apply | Company | Location | Posted | Salary |
 | --- | --- | --- | --- | --- | --- |
 | [SDC BCM Tech DevOps Engineer---Senior--Dallas](https://www.linkedin.com/jobs/view/sdc-bcm-tech-devops-engineer-senior-dallas-at-ey-4402812696) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/sdc-bcm-tech-devops-engineer-senior-dallas-at-ey-4402812696) | EY | San Francisco, California | 2026-09-23 |  |
-| [AI Devops Infrastructure Engineer/GPU Infrastructure Engineer](https://www.dice.com/job-detail/3f597fb4-ded2-4875-b679-59a6b81de995) | [Apply on Dice](https://www.dice.com/job-detail/3f597fb4-ded2-4875-b679-59a6b81de995) | Maxonic, Inc. | San Jose, California | 2026-09-23 |  |
 | [Java SRE Engineer](https://www.linkedin.com/jobs/view/java-sre-engineer-at-eitacies-inc-4468992945) | [Apply on LinkedIn](https://www.linkedin.com/jobs/view/java-sre-engineer-at-eitacies-inc-4468992945) | EITACIES Inc. | Santa Clara, California | 2026-09-23 |  |
 | [DevOps Engineer - Full-time](https://www.snagajob.com/jobs/1250418129) | [Apply on Snagajob](https://www.snagajob.com/jobs/1250418129) | [Stanford Health Care](https://stanfordhealthcare.org) | Newark, California | 2026-09-23 | 79 – 105 /hour |
