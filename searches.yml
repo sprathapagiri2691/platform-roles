@@ -65,6 +65,32 @@ filters:
     - w2 only
     - "1099"
 
+  # H-1B: skip jobs whose description rules out visa sponsorship
+  # (regular expressions, case-insensitive). Jobs that don't mention
+  # sponsorship are kept, since most postings don't say either way.
+  no_sponsorship_patterns:
+    - "(unable|not able|cannot|can ?not|will not|won't|do not|does not|don't|doesn't|are not|is not|not)( be)?( able)?( to)?( currently)?( in a position to)?( offer| provide| support)?( any)?( visa| immigration| work visa)? sponsor"
+    - "no (visa |immigration |h-?1b )?sponsorship"
+    - "(not|n't) (now or in the future |currently |ever )?(require|need) (visa |employer |immigration |h-?1b )?sponsorship"
+    - "sponsorship (is |will )?(not |un)(available|be (offered|provided))"
+    - "not eligible for (visa |immigration |employer )?sponsorship"
+    - "without (the need for |requiring |needing )?(current or future |now or in the future )?(visa |employer |immigration )?sponsorship"
+    - "(us|u\\.s\\.) citizens? only"
+    - "must be (a )?(us|u\\.s\\.) citizen"
+    - "(us|u\\.s\\.) citizenship (is )?required"
+    - "(green card|gc) holders? only"
+    - "security clearance"
+    - "ts/sci|top secret"
+  # Jobs matching these get a check mark in the report's H-1B column.
+  sponsorship_patterns:
+    - "h-?1b"
+    - "visa sponsorship"
+    - "sponsorship (is )?available"
+    - "will sponsor"
+    - "we sponsor"
+  # true = list only jobs that mention sponsorship (expect very few).
+  only_jobs_mentioning_sponsorship: false
+
   # Skip staffing, recruiting and consulting firms. Keywords match the start
   # of a word in the employer name ("consult" matches "Consulting").
   staffing_name_keywords:

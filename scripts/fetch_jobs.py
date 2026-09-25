@@ -77,6 +77,23 @@ def word_pattern(words, whole_word=False):
     return re.compile(rf"(?<!\w)(?:{alternatives}){end}", re.IGNORECASE)
 
 
+def regex_any(patterns):
+    return re.compile("|".join(f"(?:{p})" for p in patterns), re.IGNORECASE) if patterns else None
+
+
+def description(job):
+    """The posting's full text: description plus any highlight bullet lists."""
+    parts = [job.get("job_description") or ""]
+    for items in (job.get("job_highlights") or {}).values():
+        parts.extend(str(i) for i in items or [])
+    return "\n".join(parts)
+
+
+def mentions_sponsorship(job, pattern):
+    """True when the posting mentions sponsorship (call only on jobs that passed the filter)."""
+    return bool(pattern and pattern.search(description(job)))
+
+
 class JobFilter:
     def __init__(self, filters):
         self.title = word_pattern(filters.get("title_keywords"))
@@ -85,6 +102,9 @@ class JobFilter:
             filters.get("contract_description_phrases"), whole_word=True)
         self.staffing_name = word_pattern(filters.get("staffing_name_keywords"))
         self.staffing_employer = word_pattern(filters.get("staffing_employers"), whole_word=True)
+        self.no_sponsorship = regex_any(filters.get("no_sponsorship_patterns"))
+        self.sponsorship = regex_any(filters.get("sponsorship_patterns"))
+        self.only_sponsoring = bool(filters.get("only_jobs_mentioning_sponsorship"))
 
     def skip_reason(self, job):
         """Why a job should be left out of the report, or None to keep it."""
@@ -107,6 +127,11 @@ class JobFilter:
                 (self.contract_description and
                  self.contract_description.search(job.get("job_description") or "")):
             return "contract/part-time"
+        text = description(job)
+        if self.no_sponsorship and self.no_sponsorship.search(text):
+            return "no visa sponsorship"
+        if self.only_sponsoring and not (self.sponsorship and self.sponsorship.search(text)):
+            return "sponsorship not mentioned"
         if self.title and not self.title.search(title):
             return "off-topic title"
         return None
@@ -159,13 +184,17 @@ def salary(job):
     return f"{(low or high):,.0f}{suffix}"
 
 
-def render(date, config, sections):
+def render(date, config, sections, sponsorship):
     lines = [f"# Jobs posted — {date}", ""]
     total = sum(len(jobs) for _, jobs in sections if jobs is not None)
     lines += [
         f"**{total}** jobs within {config.get('radius_miles', 100)} miles of "
         f"{config['location']}: full-time only, staffing/consulting firms and "
-        f"contract roles excluded. Each job is listed once, under the first search that found it.",
+        f"contract roles excluded, and jobs that rule out visa sponsorship. "
+        f"Each job is listed once, under the first search that found it.",
+        "",
+        "✅ in the H-1B column means the posting mentions visa sponsorship. A blank means it "
+        "doesn't say, not that the company won't sponsor.",
         "",
     ]
     for role, jobs in sections:
@@ -176,13 +205,14 @@ def render(date, config, sections):
         if not jobs:
             lines += ["_No new matching postings._", ""]
             continue
-        lines.append("| Job | Apply | Company | Location | Posted | Salary |")
-        lines.append("| --- | --- | --- | --- | --- | --- |")
+        lines.append("| Job | Apply | H-1B | Company | Location | Posted | Salary |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- |")
         for job in jobs:
             where, url = apply_option(job)
             title = job.get("job_title")
             lines.append(
                 f"| {link(title, url) or escape(title)} | {link(f'Apply on {where}', url) or '—'} "
+                f"| {'✅' if mentions_sponsorship(job, sponsorship) else ''} "
                 f"| {company(job)} | {location(job)} "
                 f"| {str(job.get('job_posted_at_datetime_utc') or '')[:10]} | {salary(job)} |"
             )
@@ -231,13 +261,17 @@ def main():
         print(f"{role}: {len(results)} found, {len(jobs)} kept" + (f" (skipped {details})" if details else ""))
         if results and "job_title" not in results[0]:
             print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
+        if results and not any(description(j).strip() for j in results):
+            print("  Note: no job descriptions returned, so sponsorship and contract "
+                  "wording could not be checked.", file=sys.stderr)
         for job in jobs:
             url = apply_option(job)[1] or "(no link)"
-            print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}\n    {url}")
+            visa = " | ✅ mentions sponsorship" if mentions_sponsorship(job, job_filter.sponsorship) else ""
+            print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}{visa}\n    {url}")
         sections.append((role, jobs))
 
     date = datetime.datetime.now(TIMEZONE).date().isoformat()
-    report = render(date, config, sections)
+    report = render(date, config, sections, job_filter.sponsorship)
     out_dir = ROOT / "jobs"
     out_dir.mkdir(exist_ok=True)
     (out_dir / f"{date}.md").write_text(report)

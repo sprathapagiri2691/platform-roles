@@ -1,0 +1,44 @@
+# Your application details for apply_helper.py.
+#
+# Copy this file to apply/profile.yml and fill it in:
+#   cp apply/profile.example.yml apply/profile.yml
+# profile.yml is in .gitignore, so your details never go to GitHub.
+# Leave a value empty to skip that field.
+
+first_name: ""
+last_name: ""
+email: ""
+phone: ""
+location: "San Francisco Bay Area, CA"
+
+linkedin_url: ""
+github_url: ""
+website_url: ""
+
+current_company: ""
+current_title: ""
+
+# Full path to your resume (PDF preferred). Keep it outside the repo.
+resume_path: "~/Documents/resume.pdf"
+# Optional.
+cover_letter_path: ""
+
+# Answers for yes/no dropdowns. Use exactly "Yes" or "No".
+# On an H-1B you are authorized to work now, but changing employers needs an
+# H-1B transfer, which counts as sponsorship on most forms, so answer "Yes".
+work_authorized: "Yes"
+needs_sponsorship: "Yes"
+
+# Answers for other questions. `match` is a regular expression checked
+# against the question text (case-insensitive); the first match wins.
+answers:
+  - match: "how did you hear"
+    answer: "Company careers page"
+  - match: "salary|compensation expectation"
+    answer: "Open to discussing; looking for a competitive package for the role and location."
+  - match: "years of (professional )?experience"
+    answer: ""
+  - match: "notice period|start date|when can you start"
+    answer: "Two weeks after offer"
+
+# Voluntary demographic (EEO) questions are never filled in automatically.

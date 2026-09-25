@@ -1,0 +1,10 @@
+# Personal application details and browser data for apply/apply_helper.py
+apply/profile.yml
+apply/.browser-profile/
+*.pdf
+*.docx
+
+# macOS
+.DS_Store
+VS Code
+.venv/
