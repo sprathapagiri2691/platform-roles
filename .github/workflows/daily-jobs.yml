@@ -1,10 +1,11 @@
 name: Daily job postings
 
 on:
-  schedule:
-    # 02:00 UTC = 7 PM Pacific daylight time (6 PM in winter, standard time).
-    # GitHub can start scheduled runs several minutes late.
-    - cron: "0 2 * * *"
+  # Scheduled runs are paused. Uncomment these lines to turn them back on.
+  # schedule:
+  #   # 02:00 UTC = 7 PM Pacific daylight time (6 PM in winter, standard time).
+  #   # GitHub can start scheduled runs several minutes late.
+  #   - cron: "0 2 * * *"
   workflow_dispatch: # allow manual runs from the Actions tab
 
 permissions:
