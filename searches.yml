@@ -1,21 +1,137 @@
 # Job searches run every day by .github/workflows/daily-jobs.yml
 #
-# Each role is searched around `location` within `radius_miles`.
+# Each search is run around `location` within `radius_miles`.
 # 100 miles around San Francisco covers the whole Bay Area, including
 # Santa Clara, Palo Alto, Sunnyvale, Mountain View and Fremont.
 #
+# API budget (free JSearch plan, ~200 requests/month):
+#   6 searches x 1 page x 30 days = 180 requests/month.
+#   Adding a search or a page adds 30 requests/month.
+#
 # date_posted: today | 3days | week | month | all
 # pages_per_role: each page is ~10 jobs and costs one API request.
-#   4 roles x 1 page x 30 days = 120 requests/month.
 
 location: San Francisco, CA
 country: us
 radius_miles: 100
 date_posted: today
 pages_per_role: 1
+employment_types: FULLTIME
 
+# Broad searches. Search engines match related titles, so these also cover
+# Senior Cloud Platform / Operations / Systems / Reliability / Services /
+# Solutions / Support / Network / Automation / Deployment / Integration /
+# Performance / Monitoring / Optimization / Scalability Engineer.
 roles:
   - Platform Engineer
-  - Senior Platform Engineer
-  - Senior Cloud Engineer
-  - Senior DevOps Engineer
+  - Cloud Engineer
+  - DevOps Engineer
+  - Site Reliability Engineer
+  - Cloud Infrastructure Engineer
+  - Cloud Security Engineer
+
+filters:
+  # Keep only jobs whose title contains one of these (matched at word start,
+  # so "platform" also matches "Platforms").
+  title_keywords:
+    - platform
+    - cloud
+    - devops
+    - sre
+    - site reliability
+    - reliability
+    - infrastructure
+    - kubernetes
+
+  # Skip contract, temporary and part-time jobs.
+  contract_title_keywords:
+    - contract
+    - contractor
+    - temporary
+    - part-time
+    - part time
+    - c2c
+    - w2
+    - "1099"
+  contract_description_phrases:
+    - c2c
+    - corp to corp
+    - corp-to-corp
+    - contract to hire
+    - contract-to-hire
+    - contract role
+    - contract position
+    - contract duration
+    - w2 only
+    - "1099"
+
+  # Skip staffing, recruiting and consulting firms. Keywords match the start
+  # of a word in the employer name ("consult" matches "Consulting").
+  staffing_name_keywords:
+    - staffing
+    - recruit
+    - talent
+    - consult
+    - workforce
+    - search group
+    - placement
+    - manpower
+  # Known staffing and IT services / consulting firms (whole-word match).
+  staffing_employers:
+    - Robert Half
+    - TEKsystems
+    - Insight Global
+    - Randstad
+    - Kforce
+    - Apex Systems
+    - Aerotek
+    - Adecco
+    - Hays
+    - Jobot
+    - CyberCoders
+    - Collabera
+    - Kelly Services
+    - Akkodis
+    - Modis
+    - Beacon Hill
+    - Judge Group
+    - Mindlance
+    - Diverse Lynx
+    - Vaco
+    - Addison Group
+    - Experis
+    - Harvey Nash
+    - Russell Tobin
+    - System One
+    - Motion Recruitment
+    - Infosys
+    - Tata Consultancy Services
+    - TCS
+    - Wipro
+    - HCLTech
+    - HCL Technologies
+    - Cognizant
+    - Tech Mahindra
+    - Capgemini
+    - Sogeti
+    - Accenture
+    - Deloitte
+    - EY
+    - Ernst & Young
+    - KPMG
+    - PwC
+    - PricewaterhouseCoopers
+    - LTIMindtree
+    - Mphasis
+    - Virtusa
+    - Hexaware
+    - NTT Data
+    - Genpact
+    - Slalom
+    - Booz Allen Hamilton
+    - Synechron
+    - Zensar
+    - Persistent Systems
+    - BayOne Solutions
+    - Maxonic
+    - EITACIES

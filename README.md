@@ -4,9 +4,16 @@ This repo helps with applying for platform engineering roles.
 
 ## Daily job postings
 
-A GitHub Actions workflow ([.github/workflows/daily-jobs.yml](.github/workflows/daily-jobs.yml)) runs every day and searches for jobs posted in the last day for each role in [searches.yml](searches.yml), within 100 miles of San Francisco. Results come from the [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), which returns Google for Jobs listings from LinkedIn, Indeed, Glassdoor, ZipRecruiter, company career sites and other boards.
+A GitHub Actions workflow ([.github/workflows/daily-jobs.yml](.github/workflows/daily-jobs.yml)) runs every evening around 7 PM Pacific and searches for full-time jobs posted that day within 100 miles of San Francisco. Results come from the [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), which returns Google for Jobs listings from LinkedIn, Indeed, Glassdoor, ZipRecruiter, company career sites and other boards.
 
-The report is committed to [jobs/latest.md](jobs/latest.md) (plus a dated copy in `jobs/`). Each job title links to the posting, and the Apply column says where it opens: the company's own careers site when JSearch has that link, otherwise the job board it was found on, such as LinkedIn. Company names link to the company's website.
+[searches.yml](searches.yml) sets the searches and the filters. Jobs are left out when they are:
+- posted by staffing, recruiting or consulting firms (by name keyword or a list of known firms)
+- contract, part-time or temporary, or mention C2C, W2 or 1099
+- off-topic, meaning the title has none of the target keywords (platform, cloud, DevOps, SRE, infrastructure, ...)
+
+The report is committed to [jobs/latest.md](jobs/latest.md) (plus a dated copy in `jobs/`), shown on each run's summary page, and printed with links in the run log. Each job title links to the posting, and the Apply column says where it opens: the company's own careers site when JSearch has that link, otherwise the job board it was found on, such as LinkedIn. Company names link to the company's website.
+
+The free JSearch plan allows about 200 requests a month. Each search costs one request per run (6 searches, about 180 a month), so adding searches or pages may need a paid plan.
 
 ### Setup
 

@@ -9,12 +9,15 @@ writes jobs/<date>.md plus jobs/latest.md.
 import datetime
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -24,6 +27,7 @@ KM_PER_MILE = 1.609344
 TIMEOUT_SECONDS = 120
 ATTEMPTS = 2
 ROOT = Path(__file__).resolve().parent.parent
+TIMEZONE = ZoneInfo("America/Los_Angeles")
 
 
 def fetch(role, config, api_key):
@@ -35,6 +39,8 @@ def fetch(role, config, api_key):
         "page": 1,
         "num_pages": config.get("pages_per_role", 1),
     }
+    if config.get("employment_types"):
+        params["employment_types"] = config["employment_types"]
     request = urllib.request.Request(
         API_URL + "?" + urllib.parse.urlencode(params),
         headers={
@@ -60,6 +66,50 @@ def fetch(role, config, api_key):
     if isinstance(data, dict):
         data = data.get("jobs") or data.get("data") or []
     return data
+
+
+def word_pattern(words, whole_word=False):
+    """Case-insensitive regex matching any of `words` at a word start."""
+    if not words:
+        return None
+    end = r"\b" if whole_word else ""
+    alternatives = "|".join(re.escape(str(w)) for w in words)
+    return re.compile(rf"(?<!\w)(?:{alternatives}){end}", re.IGNORECASE)
+
+
+class JobFilter:
+    def __init__(self, filters):
+        self.title = word_pattern(filters.get("title_keywords"))
+        self.contract_title = word_pattern(filters.get("contract_title_keywords"), whole_word=True)
+        self.contract_description = word_pattern(
+            filters.get("contract_description_phrases"), whole_word=True)
+        self.staffing_name = word_pattern(filters.get("staffing_name_keywords"))
+        self.staffing_employer = word_pattern(filters.get("staffing_employers"), whole_word=True)
+
+    def skip_reason(self, job):
+        """Why a job should be left out of the report, or None to keep it."""
+        employer = job.get("employer_name") or ""
+        company_type = str(job.get("employer_company_type") or "")
+        if (self.staffing_name and self.staffing_name.search(employer)) or \
+                (self.staffing_employer and self.staffing_employer.search(employer)) or \
+                re.search(r"staffing|consult", company_type, re.IGNORECASE):
+            return "staffing/consulting firm"
+
+        types = job.get("job_employment_types") or [job.get("job_employment_type")]
+        types = " ".join(re.sub(r"[^A-Z]", "", str(t).upper()) for t in types if t)
+        if re.search("CONTRACT|PARTTIME|TEMPORARY|INTERN", types):
+            return "contract/part-time"
+        if types and "FULLTIME" not in types:
+            return "not full-time"
+
+        title = job.get("job_title") or ""
+        if (self.contract_title and self.contract_title.search(title)) or \
+                (self.contract_description and
+                 self.contract_description.search(job.get("job_description") or "")):
+            return "contract/part-time"
+        if self.title and not self.title.search(title):
+            return "off-topic title"
+        return None
 
 
 def escape(text):
@@ -114,7 +164,8 @@ def render(date, config, sections):
     total = sum(len(jobs) for _, jobs in sections if jobs is not None)
     lines += [
         f"**{total}** jobs within {config.get('radius_miles', 100)} miles of "
-        f"{config['location']}. Each job is listed once, under the first role that found it.",
+        f"{config['location']}: full-time only, staffing/consulting firms and "
+        f"contract roles excluded. Each job is listed once, under the first search that found it.",
         "",
     ]
     for role, jobs in sections:
@@ -123,7 +174,7 @@ def render(date, config, sections):
             lines += ["_Search failed; see the workflow log._", ""]
             continue
         if not jobs:
-            lines += ["_No postings other than those listed above._", ""]
+            lines += ["_No new matching postings._", ""]
             continue
         lines.append("| Job | Apply | Company | Location | Posted | Salary |")
         lines.append("| --- | --- | --- | --- | --- | --- |")
@@ -148,6 +199,7 @@ def main():
     sections = []
     seen = set()
     failures = 0
+    job_filter = JobFilter(config.get("filters") or {})
     for role in config.get("roles", []):
         try:
             results = fetch(role, config, api_key)
@@ -159,25 +211,32 @@ def main():
             sections.append((role, None))
             failures += 1
             continue
-        # Overlapping roles (e.g. "Platform Engineer" and "Senior Platform
-        # Engineer") return the same postings; list each job only once.
+        # Overlapping searches return the same postings; list each job only once.
         jobs = []
+        skipped = Counter()
         for job in results:
             # search-v2 job_ids differ between queries, so match on the posting itself.
             key = tuple(str(job.get(f) or "").strip().lower()
                         for f in ("job_title", "employer_name", "job_city"))
-            if key not in seen:
-                seen.add(key)
+            if key in seen:
+                skipped["duplicate"] += 1
+                continue
+            seen.add(key)
+            reason = job_filter.skip_reason(job)
+            if reason:
+                skipped[reason] += 1
+            else:
                 jobs.append(job)
-        print(f"{role}: {len(results)} found, {len(jobs)} new")
+        details = ", ".join(f"{n} {reason}" for reason, n in skipped.most_common())
+        print(f"{role}: {len(results)} found, {len(jobs)} kept" + (f" (skipped {details})" if details else ""))
+        if results and "job_title" not in results[0]:
+            print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
         for job in jobs:
             url = apply_option(job)[1] or "(no link)"
             print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}\n    {url}")
-        if results and "job_title" not in results[0]:
-            print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
         sections.append((role, jobs))
 
-    date = datetime.date.today().isoformat()
+    date = datetime.datetime.now(TIMEZONE).date().isoformat()
     report = render(date, config, sections)
     out_dir = ROOT / "jobs"
     out_dir.mkdir(exist_ok=True)
