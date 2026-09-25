@@ -42,6 +42,39 @@ filters:
     - reliability
     - infrastructure
     - kubernetes
+  # ...and one of these (an engineering role)...
+  title_role_keywords:
+    - engineer
+    - sre
+    - architect
+    - developer
+    - devops
+  # ...and none of these (management, non-engineering, other specialties).
+  title_exclude_keywords:
+    - manager
+    - director
+    - head of
+    - vp
+    - counsel
+    - sales
+    - recruit
+    - program
+    - product
+    - marketing
+    - finance
+    - scientist
+    - analyst
+    - designer
+    - account
+    - frontend
+    - front end
+    - front-end
+    - embedded
+    - mobile
+    - ios
+    - android
+    - firmware
+    - hardware
 
   # Skip contract, temporary and part-time jobs.
   contract_title_keywords:

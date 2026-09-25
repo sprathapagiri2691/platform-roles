@@ -1,0 +1,130 @@
+# Startup career boards checked on every run by scripts/startup_jobs.py.
+#
+# These are the companies' own job boards on Greenhouse, Lever and Ashby.
+# Their public APIs are free and don't use the JSearch quota, and every link
+# goes straight to the company's application form.
+#
+# To add a company, find its careers page URL:
+#   boards.greenhouse.io/<board> or job-boards.greenhouse.io/<board>  -> ats: greenhouse
+#   jobs.lever.co/<board>                                             -> ats: lever
+#   jobs.ashbyhq.com/<board>                                          -> ats: ashby
+# The same title, contract, and visa-sponsorship filters as searches.yml apply.
+
+# Only list jobs first published within this many days (0 = all open jobs).
+max_age_days: 7
+
+# A job is kept when one of its locations mentions one of these places
+# (all within about 100 miles of San Francisco). Towns that share a name with
+# places elsewhere (Dublin, Newark, Concord) are listed with their state.
+locations:
+  - San Francisco
+  - SF
+  - Bay Area
+  - South San Francisco
+  - Oakland
+  - Berkeley
+  - Emeryville
+  - Alameda
+  - San Mateo
+  - Burlingame
+  - San Bruno
+  - Foster City
+  - Redwood City
+  - San Carlos
+  - Menlo Park
+  - Palo Alto
+  - Mountain View
+  - Los Altos
+  - Sunnyvale
+  - Santa Clara
+  - Cupertino
+  - San Jose
+  - Campbell
+  - Los Gatos
+  - Milpitas
+  - Fremont
+  - Newark, CA
+  - Newark, California
+  - Hayward
+  - Pleasanton
+  - Dublin, CA
+  - Dublin, California
+  - San Ramon
+  - Walnut Creek
+  - Concord, CA
+  - Concord, California
+  - Livermore
+  - San Rafael
+  - Novato
+  - Petaluma
+  - Santa Rosa
+  - Napa
+  - Vallejo
+  - Santa Cruz
+  - Sacramento
+  - Davis
+  - Stockton
+
+# true = also keep jobs listed only as remote.
+include_remote: false
+
+companies:
+  # AI / ML
+  - {name: Anthropic, ats: greenhouse, board: anthropic}
+  - {name: OpenAI, ats: ashby, board: openai}
+  - {name: Perplexity, ats: ashby, board: perplexity}
+  - {name: Scale AI, ats: greenhouse, board: scaleai}
+  - {name: Together AI, ats: greenhouse, board: togetherai}
+  - {name: Baseten, ats: ashby, board: baseten}
+  - {name: Modal, ats: ashby, board: modal}
+  - {name: Anyscale, ats: ashby, board: anyscale}
+  - {name: LangChain, ats: ashby, board: langchain}
+  - {name: Cognition, ats: ashby, board: cognition}
+  - {name: Decagon, ats: ashby, board: decagon}
+  - {name: Sierra, ats: ashby, board: sierra}
+  - {name: Harvey, ats: ashby, board: harvey}
+  - {name: Glean, ats: greenhouse, board: gleanwork}
+  - {name: Snorkel AI, ats: greenhouse, board: snorkelai}
+  - {name: Character.AI, ats: ashby, board: character}
+  - {name: ElevenLabs, ats: ashby, board: elevenlabs}
+  - {name: Pika, ats: ashby, board: pika}
+  - {name: Imbue, ats: greenhouse, board: imbue}
+  # AI infrastructure and chips
+  - {name: Lambda, ats: ashby, board: lambda}
+  - {name: Crusoe, ats: ashby, board: crusoe}
+  - {name: Etched, ats: ashby, board: etched}
+  - {name: SambaNova, ats: greenhouse, board: sambanovasystems}
+  - {name: Tenstorrent, ats: greenhouse, board: tenstorrent}
+  # Developer tools and infrastructure
+  - {name: Databricks, ats: greenhouse, board: databricks}
+  - {name: Vercel, ats: greenhouse, board: vercel}
+  - {name: Replit, ats: ashby, board: replit}
+  - {name: Fivetran, ats: greenhouse, board: fivetran}
+  - {name: PlanetScale, ats: greenhouse, board: planetscale}
+  - {name: Temporal, ats: ashby, board: temporal}
+  - {name: Sentry, ats: ashby, board: sentry}
+  - {name: Render, ats: ashby, board: render}
+  - {name: Airbyte, ats: ashby, board: airbyte}
+  - {name: Mixpanel, ats: greenhouse, board: mixpanel}
+  - {name: Hex, ats: ashby, board: hex}
+  - {name: Drata, ats: ashby, board: drata}
+  - {name: Notion, ats: ashby, board: notion}
+  - {name: Discord, ats: greenhouse, board: discord}
+  # Fintech
+  - {name: Stripe, ats: greenhouse, board: stripe}
+  - {name: Ramp, ats: ashby, board: ramp}
+  - {name: Brex, ats: greenhouse, board: brex}
+  - {name: Plaid, ats: ashby, board: plaid}
+  - {name: Mercury, ats: greenhouse, board: mercury}
+  - {name: Gusto, ats: greenhouse, board: gusto}
+  - {name: Checkr, ats: greenhouse, board: checkr}
+  - {name: Zip, ats: ashby, board: zip}
+  # Other
+  - {name: Faire, ats: greenhouse, board: faire}
+  - {name: Flexport, ats: greenhouse, board: flexport}
+  - {name: Benchling, ats: ashby, board: benchling}
+  - {name: Watershed, ats: ashby, board: watershed}
+  - {name: Verkada, ats: greenhouse, board: verkada}
+  - {name: Nuro, ats: greenhouse, board: nuro}
+  - {name: Skydio, ats: ashby, board: skydio}
+  - {name: Waabi, ats: lever, board: waabi}

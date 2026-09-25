@@ -6,10 +6,12 @@ This repo helps with applying for platform engineering roles.
 
 A GitHub Actions workflow ([.github/workflows/daily-jobs.yml](.github/workflows/daily-jobs.yml)) runs every evening around 7 PM Pacific and searches for full-time jobs posted that day within 100 miles of San Francisco. Results come from the [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), which returns Google for Jobs listings from LinkedIn, Indeed, Glassdoor, ZipRecruiter, company career sites and other boards.
 
+**Startups.** Each run also checks the career boards of about 50 Bay Area startups listed in [startups.yml](startups.yml), such as Anthropic, OpenAI, Databricks, Stripe, Lambda, Crusoe and Sentry. These are the companies' own Greenhouse, Lever and Ashby boards, so every link goes straight to the company's application form, and their free public APIs don't use the JSearch quota. Jobs posted in the last 7 days in the Bay Area are listed first in the report, under "Startups (company career sites)". Add a company by adding its board to `startups.yml`.
+
 [searches.yml](searches.yml) sets the searches and the filters. Jobs are left out when they are:
 - posted by staffing, recruiting or consulting firms (by name keyword or a list of known firms)
 - contract, part-time or temporary, or mention C2C, W2 or 1099
-- off-topic, meaning the title has none of the target keywords (platform, cloud, DevOps, SRE, infrastructure, ...)
+- off-topic: the title must name a target area (platform, cloud, DevOps, SRE, infrastructure, ...) and an engineering role (engineer, SRE, architect, ...), and must not be a management or non-engineering role (manager, director, sales, product, ...)
 - ruling out visa sponsorship ("unable to sponsor", "US citizens only", security clearance, ...). Jobs that mention H-1B or visa sponsorship get a ✅ in the H-1B column; a blank means the posting doesn't say.
 
 The report is committed to [jobs/latest.md](jobs/latest.md) (plus a dated copy in `jobs/`), shown on each run's summary page, and printed with links in the run log. Each job title links to the posting, and the Apply column says where it opens: the company's own careers site when JSearch has that link, otherwise the job board it was found on, such as LinkedIn. Company names link to the company's website.

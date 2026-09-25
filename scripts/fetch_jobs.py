@@ -21,6 +21,8 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
+import startup_jobs
+
 API_URL = "https://jsearch.p.rapidapi.com/search-v2"
 API_HOST = "jsearch.p.rapidapi.com"
 KM_PER_MILE = 1.609344
@@ -28,6 +30,7 @@ TIMEOUT_SECONDS = 120
 ATTEMPTS = 2
 ROOT = Path(__file__).resolve().parent.parent
 TIMEZONE = ZoneInfo("America/Los_Angeles")
+STARTUP_SECTION = "Startups (company career sites)"
 
 
 def fetch(role, config, api_key):
@@ -97,6 +100,8 @@ def mentions_sponsorship(job, pattern):
 class JobFilter:
     def __init__(self, filters):
         self.title = word_pattern(filters.get("title_keywords"))
+        self.title_role = word_pattern(filters.get("title_role_keywords"))
+        self.title_exclude = word_pattern(filters.get("title_exclude_keywords"), whole_word=True)
         self.contract_title = word_pattern(filters.get("contract_title_keywords"), whole_word=True)
         self.contract_description = word_pattern(
             filters.get("contract_description_phrases"), whole_word=True)
@@ -132,7 +137,9 @@ class JobFilter:
             return "no visa sponsorship"
         if self.only_sponsoring and not (self.sponsorship and self.sponsorship.search(text)):
             return "sponsorship not mentioned"
-        if self.title and not self.title.search(title):
+        if (self.title and not self.title.search(title)) or \
+                (self.title_role and not self.title_role.search(title)) or \
+                (self.title_exclude and self.title_exclude.search(title)):
             return "off-topic title"
         return None
 
@@ -174,6 +181,8 @@ def location(job):
 
 
 def salary(job):
+    if job.get("salary_text"):
+        return escape(job["salary_text"])
     low, high = job.get("job_min_salary"), job.get("job_max_salary")
     if not low and not high:
         return ""
@@ -188,7 +197,7 @@ def render(date, config, sections, sponsorship):
     lines = [f"# Jobs posted — {date}", ""]
     total = sum(len(jobs) for _, jobs in sections if jobs is not None)
     lines += [
-        f"**{total}** jobs within {config.get('radius_miles', 100)} miles of "
+        f"**{total}** jobs within about {config.get('radius_miles', 100)} miles of "
         f"{config['location']}: full-time only, staffing/consulting firms and "
         f"contract roles excluded, and jobs that rule out visa sponsorship. "
         f"Each job is listed once, under the first search that found it.",
@@ -220,6 +229,55 @@ def render(date, config, sections, sponsorship):
     return "\n".join(lines)
 
 
+def dedupe_key(job):
+    """Same posting across searches and sources: title plus the employer's first word
+    (so "Chime" and "Chime Financial, Inc" match). search-v2 job_ids differ between queries."""
+    title = re.sub(r"\W+", " ", str(job.get("job_title") or "").lower()).strip()
+    employer = re.sub(r"\W+", " ", str(job.get("employer_name") or "").lower()).split()
+    return title, employer[0] if employer else ""
+
+
+def keep_jobs(source, results, seen, job_filter):
+    """Drop duplicates and filtered jobs, log what's left with links, return it."""
+    jobs = []
+    skipped = Counter()
+    for job in results:
+        key = dedupe_key(job)
+        if key in seen:
+            skipped["duplicate"] += 1
+            continue
+        seen.add(key)
+        reason = job_filter.skip_reason(job)
+        if reason:
+            skipped[reason] += 1
+        else:
+            jobs.append(job)
+    details = ", ".join(f"{n} {reason}" for reason, n in skipped.most_common())
+    print(f"{source}: {len(results)} found, {len(jobs)} kept" + (f" (skipped {details})" if details else ""))
+    if results and "job_title" not in results[0]:
+        print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
+    if results and not any(description(j).strip() for j in results):
+        print("  Note: no job descriptions returned, so sponsorship and contract "
+              "wording could not be checked.", file=sys.stderr)
+    for job in jobs:
+        url = apply_option(job)[1] or "(no link)"
+        visa = " | ✅ mentions sponsorship" if mentions_sponsorship(job, job_filter.sponsorship) else ""
+        print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}{visa}\n    {url}")
+    return jobs
+
+
+def fetch_startups(seen, job_filter):
+    """The startup section, or None when startups.yml is missing or every board failed."""
+    path = ROOT / "startups.yml"
+    if not path.exists():
+        return None
+    config = yaml.safe_load(path.read_text()) or {}
+    results, failures = startup_jobs.fetch_all(config)
+    if failures and failures == len(config.get("companies") or []):
+        return None
+    return keep_jobs(STARTUP_SECTION, results, seen, job_filter)
+
+
 def main():
     api_key = os.environ.get("JSEARCH_API_KEY")
     if not api_key:
@@ -230,7 +288,13 @@ def main():
     seen = set()
     failures = 0
     job_filter = JobFilter(config.get("filters") or {})
-    for role in config.get("roles", []):
+    # Startups first, so a job found both there and on LinkedIn keeps its
+    # direct company link.
+    startups = fetch_startups(seen, job_filter)
+    if startups is not None:
+        sections.append((STARTUP_SECTION, startups))
+    roles = config.get("roles", [])
+    for role in roles:
         try:
             results = fetch(role, config, api_key)
         except (OSError, ValueError) as err:
@@ -241,33 +305,7 @@ def main():
             sections.append((role, None))
             failures += 1
             continue
-        # Overlapping searches return the same postings; list each job only once.
-        jobs = []
-        skipped = Counter()
-        for job in results:
-            # search-v2 job_ids differ between queries, so match on the posting itself.
-            key = tuple(str(job.get(f) or "").strip().lower()
-                        for f in ("job_title", "employer_name", "job_city"))
-            if key in seen:
-                skipped["duplicate"] += 1
-                continue
-            seen.add(key)
-            reason = job_filter.skip_reason(job)
-            if reason:
-                skipped[reason] += 1
-            else:
-                jobs.append(job)
-        details = ", ".join(f"{n} {reason}" for reason, n in skipped.most_common())
-        print(f"{role}: {len(results)} found, {len(jobs)} kept" + (f" (skipped {details})" if details else ""))
-        if results and "job_title" not in results[0]:
-            print(f"Unexpected job fields: {sorted(results[0])}", file=sys.stderr)
-        if results and not any(description(j).strip() for j in results):
-            print("  Note: no job descriptions returned, so sponsorship and contract "
-                  "wording could not be checked.", file=sys.stderr)
-        for job in jobs:
-            url = apply_option(job)[1] or "(no link)"
-            visa = " | ✅ mentions sponsorship" if mentions_sponsorship(job, job_filter.sponsorship) else ""
-            print(f"  - {job.get('job_title')} | {job.get('employer_name')} | {location(job)}{visa}\n    {url}")
+        jobs = keep_jobs(role, results, seen, job_filter)
         sections.append((role, jobs))
 
     date = datetime.datetime.now(TIMEZONE).date().isoformat()
@@ -282,7 +320,7 @@ def main():
         with open(summary, "a") as f:
             f.write(report + "\n")
 
-    if sections and failures == len(sections):
+    if roles and failures == len(roles) and startups is None:
         sys.exit("All searches failed")
 
 
