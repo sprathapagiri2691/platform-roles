@@ -50,6 +50,8 @@ filters:
     - temporary
     - part-time
     - part time
+    - intern
+    - internship
     - c2c
     - w2
     - "1099"
@@ -161,3 +163,4 @@ filters:
     - BayOne Solutions
     - Maxonic
     - EITACIES
+    - SoTalent
