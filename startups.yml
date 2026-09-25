@@ -1,8 +1,10 @@
-# Startup career boards checked on every run by scripts/startup_jobs.py.
+# Startup job sources checked on every run.
 #
-# These are the companies' own job boards on Greenhouse, Lever and Ashby.
-# Their public APIs are free and don't use the JSearch quota, and every link
-# goes straight to the company's application form.
+# 1. Startup career boards on Greenhouse, Lever and Ashby: the `companies`
+#    below plus boards discovered automatically. Their public APIs are free,
+#    don't use the JSearch quota, and link straight to the company's
+#    application form.
+# 2. Hacker News "Who is hiring?" threads, where startups post each month.
 #
 # To add a company, find its careers page URL:
 #   boards.greenhouse.io/<board> or job-boards.greenhouse.io/<board>  -> ats: greenhouse
@@ -10,10 +12,25 @@
 #   jobs.ashbyhq.com/<board>                                          -> ats: ashby
 # The same title, contract, and visa-sponsorship filters as searches.yml apply.
 
-# Only list jobs first published within this many days (0 = all open jobs).
+# Find more startups automatically: any Greenhouse, Lever or Ashby job board
+# linked from search results or Hacker News posts is checked and, if it
+# works, saved to data/discovered_boards.json and searched on every run.
+discover_boards: true
+
+# Boards to never check, as "ats/board", e.g. "greenhouse/databricks".
+exclude_boards: []
+
+hacker_news:
+  enabled: true
+  # Latest monthly "Who is hiring?" threads to read (2 = this month and last).
+  threads: 2
+  # Only posts from the last this-many days.
+  max_age_days: 45
+
+# Only list board jobs first published within this many days (0 = all open jobs).
 max_age_days: 7
 
-# A job is kept when one of its locations mentions one of these places
+# A job or Hacker News post is kept when its location mentions one of these places
 # (all within about 100 miles of San Francisco). Towns that share a name with
 # places elsewhere (Dublin, Newark, Concord) are listed with their state.
 locations:
@@ -68,6 +85,7 @@ locations:
 # true = also keep jobs listed only as remote.
 include_remote: false
 
+# Starting list of companies. Discovered boards are added on top of these.
 companies:
   # AI / ML
   - {name: Anthropic, ats: greenhouse, board: anthropic}

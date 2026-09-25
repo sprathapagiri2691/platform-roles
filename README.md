@@ -6,7 +6,12 @@ This repo helps with applying for platform engineering roles.
 
 A GitHub Actions workflow ([.github/workflows/daily-jobs.yml](.github/workflows/daily-jobs.yml)) runs every evening around 7 PM Pacific and searches for full-time jobs posted that day within 100 miles of San Francisco. Results come from the [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), which returns Google for Jobs listings from LinkedIn, Indeed, Glassdoor, ZipRecruiter, company career sites and other boards.
 
-**Startups.** Each run also checks the career boards of about 50 Bay Area startups listed in [startups.yml](startups.yml), such as Anthropic, OpenAI, Databricks, Stripe, Lambda, Crusoe and Sentry. These are the companies' own Greenhouse, Lever and Ashby boards, so every link goes straight to the company's application form, and their free public APIs don't use the JSearch quota. Jobs posted in the last 7 days in the Bay Area are listed first in the report, under "Startups (company career sites)". Add a company by adding its board to `startups.yml`.
+**Startups.** Each run also searches startups directly, without using the JSearch quota ([startups.yml](startups.yml)):
+- **Startup career boards:** the companies' own Greenhouse, Lever and Ashby job boards, so every link goes straight to the company's application form. It starts from about 50 listed Bay Area startups (Anthropic, OpenAI, Databricks, Stripe, Lambda, Crusoe, ...) and grows by itself.
+- **Hacker News "Who is hiring?":** the monthly threads where hundreds of startups post openings. Bay Area posts for the target roles are listed; posts marked "VISA" get the H-1B ✅ and posts saying "no visa" are dropped.
+- **Auto-discovery:** any Greenhouse, Lever or Ashby board linked from Hacker News posts or search results is checked and saved to [data/discovered_boards.json](data/discovered_boards.json), and searched on every later run. To stop checking one, add it to `exclude_boards` in `startups.yml`.
+
+Startup jobs are listed first in the report. Board jobs are limited to the last 7 days and Hacker News posts to the last 45.
 
 [searches.yml](searches.yml) sets the searches and the filters. Jobs are left out when they are:
 - posted by staffing, recruiting or consulting firms (by name keyword or a list of known firms)

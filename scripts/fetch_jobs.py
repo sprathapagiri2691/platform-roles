@@ -21,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
+import hn_jobs
 import startup_jobs
 
 API_URL = "https://jsearch.p.rapidapi.com/search-v2"
@@ -31,6 +32,9 @@ ATTEMPTS = 2
 ROOT = Path(__file__).resolve().parent.parent
 TIMEZONE = ZoneInfo("America/Los_Angeles")
 STARTUP_SECTION = "Startups (company career sites)"
+HN_SECTION = "Startups (Hacker News: Who is hiring?)"
+DISCOVERED_BOARDS = ROOT / "data" / "discovered_boards.json"
+URL_IN_TEXT = re.compile(r"https?://[^\s)\]>\"']+")
 
 
 def fetch(role, config, api_key):
@@ -266,14 +270,65 @@ def keep_jobs(source, results, seen, job_filter):
     return jobs
 
 
-def fetch_startups(seen, job_filter):
-    """The startup section, or None when startups.yml is missing or every board failed."""
-    path = ROOT / "startups.yml"
-    if not path.exists():
-        return None
-    config = yaml.safe_load(path.read_text()) or {}
-    results, failures = startup_jobs.fetch_all(config)
-    if failures and failures == len(config.get("companies") or []):
+def load_yaml(name):
+    path = ROOT / name
+    return (yaml.safe_load(path.read_text()) or {}) if path.exists() else None
+
+
+def load_discovered():
+    try:
+        return json.loads(DISCOVERED_BOARDS.read_text())
+    except FileNotFoundError:
+        return []
+
+
+def save_discovered(entries):
+    DISCOVERED_BOARDS.parent.mkdir(exist_ok=True)
+    entries = sorted(entries, key=lambda e: (e["name"].lower(), e["ats"], e["board"]))
+    DISCOVERED_BOARDS.write_text(json.dumps(entries, indent=2) + "\n")
+
+
+def job_links(job):
+    links = [job.get("job_apply_link")]
+    links += [o.get("apply_link") for o in job.get("apply_options") or []]
+    return [l for l in links if l] + URL_IN_TEXT.findall(job.get("job_description") or "")
+
+
+def discover_boards(startup_config, companies, discovered, searched, hn_posts, hn_links, date):
+    """Add job boards linked from search results and HN posts to `discovered`."""
+    excluded = {str(k).lower() for k in startup_config.get("exclude_boards") or []}
+    known = {startup_jobs.board_key(c["ats"], c["board"]) for c in companies + discovered}
+    candidates = []
+    for job in [j for _, results in searched for j in results or []] + (hn_posts or []):
+        for ats, board in startup_jobs.boards_in(job_links(job)):
+            candidates.append((ats, board, job.get("employer_name") or ""))
+    for link, company in hn_links:
+        candidates += [(ats, board, company) for ats, board in startup_jobs.boards_in([link])]
+    new = startup_jobs.discover(candidates, known, excluded)
+    for entry in new:
+        entry["first_seen"] = date
+    if new:
+        print(f"Discovered {len(new)} new startup job boards: " + ", ".join(e["name"] for e in new))
+    discovered.extend(new)
+
+
+def fetch_startups(startup_config, companies, discovered, seen, job_filter):
+    """The startup-board section, or None when every board failed."""
+    excluded = {str(k).lower() for k in startup_config.get("exclude_boards") or []}
+    boards = {}
+    for company in companies + discovered:
+        key = startup_jobs.board_key(company["ats"], company["board"])
+        if key not in excluded:
+            boards.setdefault(key, company)
+    results, failed = startup_jobs.fetch_all(startup_config, list(boards.values()))
+    # Forget discovered boards that no longer exist.
+    gone = {key for key, err in failed.items()
+            if isinstance(err, urllib.error.HTTPError) and err.code == 404}
+    discovered[:] = [d for d in discovered
+                     if startup_jobs.board_key(d["ats"], d["board"]) not in gone]
+    print(f"Checked {len(boards)} startup job boards ({len(companies)} listed, "
+          f"{len(discovered)} discovered, {len(failed)} failed)")
+    if boards and len(failed) == len(boards):
         return None
     return keep_jobs(STARTUP_SECTION, results, seen, job_filter)
 
@@ -288,27 +343,52 @@ def main():
     seen = set()
     failures = 0
     job_filter = JobFilter(config.get("filters") or {})
-    # Startups first, so a job found both there and on LinkedIn keeps its
-    # direct company link.
-    startups = fetch_startups(seen, job_filter)
-    if startups is not None:
-        sections.append((STARTUP_SECTION, startups))
+    date = datetime.datetime.now(TIMEZONE).date().isoformat()
+
+    # 1. Collect raw results from every source.
     roles = config.get("roles", [])
+    searched = []
     for role in roles:
         try:
-            results = fetch(role, config, api_key)
+            searched.append((role, fetch(role, config, api_key)))
         except (OSError, ValueError) as err:
             detail = ""
             if isinstance(err, urllib.error.HTTPError):
                 detail = " — " + err.read().decode(errors="replace")[:500]
             print(f"Search '{role}' failed: {err}{detail}", file=sys.stderr)
-            sections.append((role, None))
+            searched.append((role, None))
             failures += 1
-            continue
-        jobs = keep_jobs(role, results, seen, job_filter)
-        sections.append((role, jobs))
 
-    date = datetime.datetime.now(TIMEZONE).date().isoformat()
+    startup_config = load_yaml("startups.yml")
+    hn_posts, hn_links = None, []
+    hn_config = (startup_config or {}).get("hacker_news") or {}
+    if startup_config is not None and hn_config.get("enabled"):
+        try:
+            hn_posts, hn_links = hn_jobs.fetch_posts(
+                hn_config, startup_jobs.place_pattern(startup_config))
+        except (OSError, ValueError, KeyError) as err:
+            print(f"Hacker News failed: {err}", file=sys.stderr)
+
+    # 2. Find more startups from the links in those results, then check
+    #    every startup board. Startups go first so a job also found on
+    #    LinkedIn keeps its direct company link.
+    startups = None
+    if startup_config is not None:
+        companies = list(startup_config.get("companies") or [])
+        discovered = load_discovered()
+        if startup_config.get("discover_boards"):
+            discover_boards(startup_config, companies, discovered, searched, hn_posts, hn_links, date)
+        startups = fetch_startups(startup_config, companies, discovered, seen, job_filter)
+        save_discovered(discovered)
+        sections.append((STARTUP_SECTION, startups))
+    if hn_config.get("enabled"):
+        sections.append((HN_SECTION, None if hn_posts is None
+                         else keep_jobs(HN_SECTION, hn_posts, seen, job_filter)))
+
+    # 3. Then the JSearch results.
+    for role, results in searched:
+        sections.append((role, None if results is None else keep_jobs(role, results, seen, job_filter)))
+
     report = render(date, config, sections, job_filter.sponsorship)
     out_dir = ROOT / "jobs"
     out_dir.mkdir(exist_ok=True)
@@ -320,7 +400,7 @@ def main():
         with open(summary, "a") as f:
             f.write(report + "\n")
 
-    if roles and failures == len(roles) and startups is None:
+    if roles and failures == len(roles) and startups is None and hn_posts is None:
         sys.exit("All searches failed")
 
 

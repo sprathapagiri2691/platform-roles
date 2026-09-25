@@ -116,6 +116,9 @@ filters:
     - "(green card|gc) holders? only"
     - "security clearance"
     - "ts/sci|top secret"
+    # Hacker News posts usually say "no visa" or "Visa: No".
+    - "no visas?(?! sponsorship (is )?available)"
+    - "visas?( sponsorship)? ?: ?no"
   # Jobs matching these get a check mark in the report's H-1B column.
   sponsorship_patterns:
     - "h-?1b"
@@ -123,6 +126,9 @@ filters:
     - "sponsorship (is )?available"
     - "will sponsor"
     - "we sponsor"
+    # Hacker News headers list "VISA" as a field when they sponsor.
+    - "\\| ?visas?( sponsorship)? ?(\\||$)"
+    - "visas?( sponsorship)? ?: ?yes"
   # true = list only jobs that mention sponsorship (expect very few).
   only_jobs_mentioning_sponsorship: false
 
