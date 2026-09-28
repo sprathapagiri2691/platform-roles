@@ -34,6 +34,9 @@ TIMEZONE = ZoneInfo("America/Los_Angeles")
 STARTUP_SECTION = "Startups (company career sites)"
 HN_SECTION = "Startups (Hacker News: Who is hiring?)"
 DISCOVERED_BOARDS = ROOT / "data" / "discovered_boards.json"
+LISTED_JOBS = ROOT / "data" / "listed_jobs.json"
+# Forget listed jobs after this many days, so a job reposted later shows up again.
+REMEMBER_LISTED_DAYS = 60
 URL_IN_TEXT = re.compile(r"https?://[^\s)\]>\"']+")
 
 
@@ -198,12 +201,14 @@ def salary(job):
 
 
 def render(date, config, sections, sponsorship):
+    new_only = config.get("hide_previously_listed", True)
     lines = [f"# Jobs posted — {date}", ""]
     total = sum(len(jobs) for _, jobs in sections if jobs is not None)
     lines += [
         f"**{total}** jobs within about {config.get('radius_miles', 100)} miles of "
         f"{config['location']}: full-time only, staffing/consulting firms and "
         f"contract roles excluded, and jobs that rule out visa sponsorship. "
+        f"{'Only jobs not listed in an earlier report. ' if new_only else ''}"
         f"Each job is listed once, under the first search that found it.",
         "",
         "✅ in the H-1B column means the posting mentions visa sponsorship. A blank means it "
@@ -241,20 +246,48 @@ def dedupe_key(job):
     return title, employer[0] if employer else ""
 
 
-def keep_jobs(source, results, seen, job_filter):
-    """Drop duplicates and filtered jobs, log what's left with links, return it."""
+class ListedJobs:
+    """Jobs already seen in this run, and jobs listed in earlier reports."""
+
+    def __init__(self, today, hide_earlier):
+        self.today = today
+        self.hide_earlier = hide_earlier
+        self.this_run = set()
+        try:
+            self.first_listed = json.loads(LISTED_JOBS.read_text())
+        except FileNotFoundError:
+            self.first_listed = {}
+
+    def in_earlier_report(self, key):
+        # Jobs first listed today stay, so re-running the same day keeps the report.
+        first = self.first_listed.get(key)
+        return self.hide_earlier and first is not None and first < self.today
+
+    def save(self):
+        cutoff = (datetime.date.fromisoformat(self.today)
+                  - datetime.timedelta(days=REMEMBER_LISTED_DAYS)).isoformat()
+        kept = {k: d for k, d in self.first_listed.items() if d >= cutoff}
+        LISTED_JOBS.parent.mkdir(exist_ok=True)
+        LISTED_JOBS.write_text(json.dumps(dict(sorted(kept.items())), indent=0) + "\n")
+
+
+def keep_jobs(source, results, listed, job_filter):
+    """Drop duplicates, filtered and already-listed jobs, log what's left with links, return it."""
     jobs = []
     skipped = Counter()
     for job in results:
         key = dedupe_key(job)
-        if key in seen:
+        if key in listed.this_run:
             skipped["duplicate"] += 1
             continue
-        seen.add(key)
+        listed.this_run.add(key)
         reason = job_filter.skip_reason(job)
+        if not reason and listed.in_earlier_report(" | ".join(key)):
+            reason = "listed in an earlier report"
         if reason:
             skipped[reason] += 1
         else:
+            listed.first_listed.setdefault(" | ".join(key), listed.today)
             jobs.append(job)
     details = ", ".join(f"{n} {reason}" for reason, n in skipped.most_common())
     print(f"{source}: {len(results)} found, {len(jobs)} kept" + (f" (skipped {details})" if details else ""))
@@ -312,7 +345,7 @@ def discover_boards(startup_config, companies, discovered, searched, hn_posts, h
     discovered.extend(new)
 
 
-def fetch_startups(startup_config, companies, discovered, seen, job_filter):
+def fetch_startups(startup_config, companies, discovered, listed, job_filter):
     """The startup-board section, or None when every board failed."""
     excluded = {str(k).lower() for k in startup_config.get("exclude_boards") or []}
     boards = {}
@@ -330,7 +363,7 @@ def fetch_startups(startup_config, companies, discovered, seen, job_filter):
           f"{len(discovered)} discovered, {len(failed)} failed)")
     if boards and len(failed) == len(boards):
         return None
-    return keep_jobs(STARTUP_SECTION, results, seen, job_filter)
+    return keep_jobs(STARTUP_SECTION, results, listed, job_filter)
 
 
 def main():
@@ -340,10 +373,10 @@ def main():
 
     config = yaml.safe_load((ROOT / "searches.yml").read_text())
     sections = []
-    seen = set()
     failures = 0
     job_filter = JobFilter(config.get("filters") or {})
     date = datetime.datetime.now(TIMEZONE).date().isoformat()
+    listed = ListedJobs(date, config.get("hide_previously_listed", True))
 
     # 1. Collect raw results from every source.
     roles = config.get("roles", [])
@@ -378,16 +411,17 @@ def main():
         discovered = load_discovered()
         if startup_config.get("discover_boards"):
             discover_boards(startup_config, companies, discovered, searched, hn_posts, hn_links, date)
-        startups = fetch_startups(startup_config, companies, discovered, seen, job_filter)
+        startups = fetch_startups(startup_config, companies, discovered, listed, job_filter)
         save_discovered(discovered)
         sections.append((STARTUP_SECTION, startups))
     if hn_config.get("enabled"):
         sections.append((HN_SECTION, None if hn_posts is None
-                         else keep_jobs(HN_SECTION, hn_posts, seen, job_filter)))
+                         else keep_jobs(HN_SECTION, hn_posts, listed, job_filter)))
 
     # 3. Then the JSearch results.
     for role, results in searched:
-        sections.append((role, None if results is None else keep_jobs(role, results, seen, job_filter)))
+        sections.append((role, None if results is None else keep_jobs(role, results, listed, job_filter)))
+    listed.save()
 
     report = render(date, config, sections, job_filter.sponsorship)
     out_dir = ROOT / "jobs"

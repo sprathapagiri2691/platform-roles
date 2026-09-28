@@ -55,7 +55,10 @@ def company_name(header):
 def role_line(parts, lines):
     """The post's role for our purposes: a header part or line naming a target role."""
     for candidate in parts[1:] + lines[1:]:
-        candidate = re.sub(r"https?://\S+", "", candidate).strip(" *-•:")
+        candidate = re.sub(r"https?://\S+", "", candidate)
+        # Drop trailing details after an em dash, and "Apply here" calls to action.
+        candidate = re.split(r"\s—\s|\bapply (here|now)\b", candidate, flags=re.IGNORECASE)[0]
+        candidate = candidate.strip(" *-•:>")
         if len(candidate) <= 120 and TARGET.search(candidate) and ROLE.search(candidate):
             return candidate
     return None

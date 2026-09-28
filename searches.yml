@@ -18,6 +18,10 @@ date_posted: today
 pages_per_role: 1
 employment_types: FULLTIME
 
+# true = skip jobs that were already listed in an earlier report (remembered
+# for 60 days in data/listed_jobs.json), so each report only shows new jobs.
+hide_previously_listed: true
+
 # Broad searches. Search engines match related titles, so these also cover
 # Senior Cloud Platform / Operations / Systems / Reliability / Services /
 # Solutions / Support / Network / Automation / Deployment / Integration /

@@ -19,6 +19,8 @@ Startup jobs are listed first in the report. Board jobs are limited to the last 
 - off-topic: the title must name a target area (platform, cloud, DevOps, SRE, infrastructure, ...) and an engineering role (engineer, SRE, architect, ...), and must not be a management or non-engineering role (manager, director, sales, product, ...)
 - ruling out visa sponsorship ("unable to sponsor", "US citizens only", security clearance, ...). Jobs that mention H-1B or visa sponsorship get a ✅ in the H-1B column; a blank means the posting doesn't say.
 
+Each report lists only jobs that weren't in an earlier report. Listed jobs are remembered for 60 days in [data/listed_jobs.json](data/listed_jobs.json); running the workflow again on the same day keeps that day's jobs. Set `hide_previously_listed: false` in `searches.yml` to list every open job instead.
+
 The report is committed to [jobs/latest.md](jobs/latest.md) (plus a dated copy in `jobs/`), shown on each run's summary page, and printed with links in the run log. Each job title links to the posting, and the Apply column says where it opens: the company's own careers site when JSearch has that link, otherwise the job board it was found on, such as LinkedIn. Company names link to the company's website.
 
 The free JSearch plan allows about 200 requests a month. Each search costs one request per run (6 searches, about 180 a month), so adding searches or pages may need a paid plan.
